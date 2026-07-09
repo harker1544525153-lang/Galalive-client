@@ -1,9 +1,21 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL || '/api';
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  
+  if (envUrl && (envUrl.startsWith('http://') || envUrl.startsWith('https://'))) {
+    return envUrl;
+  }
+  
+  if (window.location.hostname === 'localhost') {
+    return '/api';
+  }
+  
+  return 'https://galalive-backend-hgvmv6jjb-harker1544.vercel.app/api';
+};
 
 const api = axios.create({
-  baseURL,
+  baseURL: getApiBaseUrl(),
   timeout: 10000,
 });
 
@@ -26,7 +38,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      const path = window.location.pathname;
+      const base = path.startsWith('/Galalive-client') ? '/Galalive-client' : '';
+      window.location.href = `${base}/login`;
     }
     return Promise.reject(error);
   }

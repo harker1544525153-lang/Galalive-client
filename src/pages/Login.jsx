@@ -359,10 +359,30 @@ const Login = ({ onLogin, onNavigate }) => {
         input[type="password"]::-webkit-credentials-auto-fill-button,
         input[type="password"]::-webkit-contacts-auto-fill-button {
           display: none !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+        input[type="password"]::-webkit-textfield-decoration-container {
+          display: none !important;
+          visibility: hidden !important;
         }
         input[type="password"]::-ms-reveal,
         input[type="password"]::-ms-clear {
           display: none !important;
+          visibility: hidden !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+        input[type="password"]::-webkit-inner-spin-button,
+        input[type="password"]::-webkit-outer-spin-button {
+          -webkit-appearance: none !important;
+          margin: 0 !important;
+        }
+        input[type="password"] {
+          -webkit-appearance: none !important;
+          appearance: none !important;
         }
       `}</style>
     </div>

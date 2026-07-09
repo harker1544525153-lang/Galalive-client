@@ -61,8 +61,18 @@ const App = () => {
       localStorage.setItem('user', JSON.stringify(defaultUser));
     }
     
+    const getRelativePath = () => {
+      const base = '/Galalive-client';
+      let path = window.location.pathname;
+      if (path.startsWith(base)) {
+        path = path.substring(base.length);
+      }
+      if (path === '') path = '/';
+      return path;
+    };
+    
     const updatePageFromUrl = () => {
-      const path = window.location.pathname;
+      const path = getRelativePath();
       if (path === '/login') {
         setCurrentPage('login');
       } else if (path === '/register') {
@@ -131,25 +141,34 @@ const App = () => {
     setFollowingVersion(prev => prev + 1);
   };
 
+  const getBasePath = () => {
+    const path = window.location.pathname;
+    if (path.startsWith('/Galalive-client')) {
+      return '/Galalive-client';
+    }
+    return '';
+  };
+
   const handleNavigate = (page, params = {}) => {
     setCurrentPage(page);
+    const base = getBasePath();
     if (params.roomId) {
       setMatch({ params });
-      window.history.pushState({}, '', `/live/${params.roomId}`);
+      window.history.pushState({}, '', `${base}/live/${params.roomId}`);
     } else if (params.keyword) {
       setSearchKeyword(params.keyword);
-      window.history.pushState({}, '', `/search?keyword=${params.keyword}`);
+      window.history.pushState({}, '', `${base}/search?keyword=${params.keyword}`);
     } else if (params.chatId !== undefined) {
       if (params.chatId === null) {
         setMatch({ params: {} });
-        window.history.pushState({}, '', '/message');
+        window.history.pushState({}, '', `${base}/message`);
       } else {
         setMatch({ params });
-        window.history.pushState({}, '', `/message/${params.chatId}`);
+        window.history.pushState({}, '', `${base}/message/${params.chatId}`);
       }
     } else {
       setMatch({ params: {} });
-      window.history.pushState({}, '', `/${page === 'home' ? '' : page}`);
+      window.history.pushState({}, '', `${base}/${page === 'home' ? '' : page}`);
     }
   };
 
