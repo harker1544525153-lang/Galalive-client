@@ -14,7 +14,9 @@
           path = path.substring(base.length);
         }
         
-        window.location.replace(base + '/index.html' + search + hash);
+        var fullPath = path + search + hash;
+        
+        window.location.replace(base + '/index.html?path=' + encodeURIComponent(fullPath));
       })();
     </script>
   </head>
