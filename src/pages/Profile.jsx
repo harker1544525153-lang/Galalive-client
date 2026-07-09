@@ -6,6 +6,7 @@ import {
   Smartphone, Apple, X, Check, Image as ImageIcon, Ticket, Diamond, Banknote,
 } from 'lucide-react';
 import { authAPI, followAPI, userAPI, certificationAPI } from '../api';
+import { getUserLevelByLevelNum, getHostLevelByLevelNum, loadLevelConfigs } from '../utils/level';
 
 const Profile = ({ user, onLogout, onNavigate, onUpdateUser }) => {
   const [profile, setProfile] = useState(null);
@@ -29,6 +30,7 @@ const Profile = ({ user, onLogout, onNavigate, onUpdateUser }) => {
 
   useEffect(() => {
     document.title = 'Gala Live - 我的';
+    loadLevelConfigs();
     loadProfile();
     loadFollowing();
     loadFollowers();
@@ -68,6 +70,15 @@ const Profile = ({ user, onLogout, onNavigate, onUpdateUser }) => {
     } catch (error) {
       console.error('Failed to load following:', error);
       setFollowing([]);
+    }
+  };
+
+  const handleUnfollow = async (followeeId) => {
+    try {
+      await followAPI.unfollow({ followeeId });
+      setFollowing(prev => prev.filter(f => f.id !== followeeId));
+    } catch (error) {
+      console.error('Failed to unfollow:', error);
     }
   };
 
@@ -361,8 +372,8 @@ const Profile = ({ user, onLogout, onNavigate, onUpdateUser }) => {
               <div className="relative flex-shrink-0">
                 <div className="w-28 h-28 rounded-full bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 p-1 shadow-xl shadow-pink-500/30">
                   <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
-                    {profile.avatar ? (
-                      <img src={profile.avatar} alt="avatar" className="w-full h-full object-cover" />
+                    {profile.cover ? (
+                      <img src={profile.cover} alt="avatar" className="w-full h-full object-cover" />
                     ) : (
                       <User className="w-14 h-14 text-gray-400" />
                     )}
@@ -409,14 +420,24 @@ const Profile = ({ user, onLogout, onNavigate, onUpdateUser }) => {
 
             {/* 等级徽章 */}
             <div className="flex items-center gap-2 mt-3 flex-wrap">
-              <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 px-3 py-1.5 rounded-full">
-                <Award className="w-4 h-4 text-blue-400" />
-                <span className="text-blue-400 text-xs font-bold">用户等级 Lv.{profile.level || 1}</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 px-3 py-1.5 rounded-full">
-                <Crown className="w-4 h-4 text-yellow-400" />
-                <span className="text-yellow-400 text-xs font-bold">主播等级 Lv.{profile.host_level || 0}</span>
-              </div>
+              {(() => {
+                const userLevel = getUserLevelByLevelNum(profile.level || 1);
+                return (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: `${userLevel.color}20`, borderColor: `${userLevel.color}30`, borderWidth: '1px', borderStyle: 'solid' }}>
+                    <Award className="w-4 h-4" style={{ color: userLevel.color }} />
+                    <span className="text-xs font-bold" style={{ color: userLevel.color }}>{userLevel.name}</span>
+                  </div>
+                );
+              })()}
+              {profile.is_host && (() => {
+                const hostLevel = getHostLevelByLevelNum(profile.host_level || 1);
+                return (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: `${hostLevel.color}20`, borderColor: `${hostLevel.color}30`, borderWidth: '1px', borderStyle: 'solid' }}>
+                    <Crown className="w-4 h-4" style={{ color: hostLevel.color }} />
+                    <span className="text-xs font-bold" style={{ color: hostLevel.color }}>{hostLevel.name}</span>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* 数据统计条 */}
@@ -592,14 +613,17 @@ const Profile = ({ user, onLogout, onNavigate, onUpdateUser }) => {
                   <div key={f.id} className="flex items-center gap-3 p-3 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-all">
                     <div className="w-11 h-11 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 p-0.5">
                       <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
-                        {f.avatar ? <img src={f.avatar} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-gray-400" />}
+                        {f.cover ? <img src={f.cover} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-gray-400" />}
                       </div>
                     </div>
                     <div className="flex-1">
                       <p className="text-white font-bold text-sm">{f.nickname}</p>
                       <p className="text-gray-500 text-xs">@{f.username}</p>
                     </div>
-                    <button className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-700 text-gray-400 hover:bg-gray-600 transition-all">
+                    <button
+                      onClick={() => handleUnfollow(f.id)}
+                      className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-700 text-gray-400 hover:bg-red-600 hover:text-white transition-all"
+                    >
                       已关注
                     </button>
                   </div>
@@ -615,7 +639,7 @@ const Profile = ({ user, onLogout, onNavigate, onUpdateUser }) => {
                   <div key={f.id} className="flex items-center gap-3 p-3 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-all">
                     <div className="w-11 h-11 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 p-0.5">
                       <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
-                        {f.avatar ? <img src={f.avatar} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-gray-400" />}
+                        {f.cover ? <img src={f.cover} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-gray-400" />}
                       </div>
                     </div>
                     <div className="flex-1">
@@ -688,8 +712,8 @@ const Profile = ({ user, onLogout, onNavigate, onUpdateUser }) => {
               <div className="relative">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 p-1">
                   <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
-                    {editForm.avatar ? (
-                      <img src={editForm.avatar} alt="" className="w-full h-full object-cover" />
+                    {editForm.cover ? (
+                      <img src={editForm.cover} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <User className="w-12 h-12 text-gray-400" />
                     )}
@@ -1201,7 +1225,7 @@ const Profile = ({ user, onLogout, onNavigate, onUpdateUser }) => {
                 </div>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 p-0.5">
                   <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
-                    {item.avatar ? <img src={item.avatar} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-gray-400" />}
+                    {item.cover ? <img src={item.cover} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-gray-400" />}
                   </div>
                 </div>
                 <div className="flex-1">

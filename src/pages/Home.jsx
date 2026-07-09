@@ -4,6 +4,7 @@ import {
   Play, ChevronRight, Eye, X, Coins, ChevronLeft,
 } from 'lucide-react';
 import { streamAPI, bannerAPI, userAPI, followAPI } from '../api';
+import { getUserLevelByLevelNum, loadLevelConfigs } from '../utils/level';
 
 const TABS = [
   { id: 'following', label: '关注', icon: Heart },
@@ -26,7 +27,7 @@ const DAILY_REWARD_AMOUNT = 100;
 const DAILY_REWARD_KEY = 'gala_last_reward_date';
 const FALLBACK_COVER = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=live%20stream%20cover%20colorful%20modern&image_size=landscape_16_9';
 
-const Home = ({ user, onNavigate }) => {
+const Home = ({ user, onNavigate, followingVersion }) => {
   const [streams, setStreams] = useState([]);
   const [banners, setBanners] = useState([]);
   const [activeTab, setActiveTab] = useState('hot');
@@ -48,6 +49,7 @@ const Home = ({ user, onNavigate }) => {
 
   useEffect(() => {
     document.title = 'Gala Live - 首页';
+    loadLevelConfigs();
     loadBanners();
     loadStreams('hot');
     if (user) {
@@ -60,10 +62,19 @@ const Home = ({ user, onNavigate }) => {
   }, []);
 
   useEffect(() => {
-    if (activeTab !== 'following') {
+    if (activeTab === 'following') {
+      loadFollowingStreams();
+    } else {
       loadStreams(activeTab);
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'following') {
+      console.log('[Home.jsx] loadFollowingStreams triggered - followingVersion:', followingVersion);
+      loadFollowingStreams();
+    }
+  }, [followingVersion, activeTab]);
 
   // Banner autoplay, pause on hover
   useEffect(() => {
@@ -187,10 +198,10 @@ const Home = ({ user, onNavigate }) => {
 
   const displayStreams = activeTab === 'following' ? followingStreams : streams;
 
-  const renderAvatar = (avatar, size = 'w-5 h-5') => {
-    if (avatar) {
+  const renderAvatar = (cover, size = 'w-5 h-5') => {
+    if (cover) {
       return (
-        <img src={avatar} alt="" className="w-full h-full rounded-full object-cover" />
+        <img src={cover} alt="" className="w-full h-full rounded-full object-cover" />
       );
     }
     return (
@@ -214,7 +225,7 @@ const Home = ({ user, onNavigate }) => {
       >
         <div className="relative aspect-video overflow-hidden">
           <img
-            src={stream.cover || FALLBACK_COVER}
+            src={stream.stream_cover || stream.cover || FALLBACK_COVER}
             alt={stream.title}
             className={`w-full h-full object-cover ${isLive ? 'group-hover:scale-110 transition-transform duration-500' : ''}`}
             onError={(e) => {
@@ -262,7 +273,7 @@ const Home = ({ user, onNavigate }) => {
           <div className="flex items-center gap-2.5 mb-2.5">
             <div className="relative shrink-0">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 p-0.5">
-                {renderAvatar(stream.avatar, 'w-4 h-4')}
+                {renderAvatar(stream.user_cover || stream.cover, 'w-4 h-4')}
               </div>
               {stream.is_host === 1 && (
                 <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-[8px]">
@@ -275,7 +286,7 @@ const Home = ({ user, onNavigate }) => {
               <p className="text-gray-500 text-xs truncate">@{stream.username || 'host'}</p>
             </div>
             {stream.level && (
-              <span className="text-xs text-pink-400 font-medium shrink-0">Lv.{stream.level}</span>
+              <span className="text-xs font-medium shrink-0" style={{ color: getUserLevelByLevelNum(stream.level).color }}>Lv.{stream.level}</span>
             )}
           </div>
           <p className="text-gray-300 text-sm line-clamp-2 mb-2.5 min-h-[2.5rem]">
@@ -601,7 +612,7 @@ const Home = ({ user, onNavigate }) => {
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-700/50 transition-colors text-left"
                     >
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 p-0.5 shrink-0">
-                        {renderAvatar(suggestion.avatar, 'w-4 h-4')}
+                        {renderAvatar(suggestion.cover, 'w-4 h-4')}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-white text-sm font-medium truncate">
@@ -639,7 +650,7 @@ const Home = ({ user, onNavigate }) => {
                 className="flex items-center gap-2 bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 px-2 sm:px-4 py-1.5 rounded-full transition-all border border-pink-500/20"
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 p-0.5">
-                  {renderAvatar(user?.avatar, 'w-4 h-4')}
+                  {renderAvatar(user?.cover, 'w-4 h-4')}
                 </div>
                 <span className="text-sm text-white font-medium hidden sm:inline">
                   {user?.nickname || '登录'}

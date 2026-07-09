@@ -19,21 +19,9 @@ const Login = ({ onLogin, onNavigate }) => {
   const [codeLoading, setCodeLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [toast, setToast] = useState(null);
-  const [showReward, setShowReward] = useState(false);
 
   useEffect(() => {
     document.title = 'Gala Live - 登录';
-
-    const hasReward = localStorage.getItem('first_login_reward');
-    const lastLogin = localStorage.getItem('last_login_date');
-    const today = new Date().toDateString();
-
-    if (!hasReward || lastLogin !== today) {
-      localStorage.setItem('first_login_reward', 'true');
-      localStorage.setItem('last_login_date', today);
-      setTimeout(() => setShowReward(true), 800);
-      setTimeout(() => setShowReward(false), 4200);
-    }
   }, []);
 
   useEffect(() => {
@@ -173,20 +161,6 @@ const Login = ({ onLogin, onNavigate }) => {
         <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-600 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-500 rounded-full blur-3xl opacity-60" />
       </div>
-
-      {showReward && (
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 animate-[bounce_0.6s_ease-out]">
-          <div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-8 py-5 rounded-2xl shadow-2xl flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-7 h-7" />
-            </div>
-            <div>
-              <p className="text-lg font-bold">今日首次登录奖励</p>
-              <p className="text-base text-green-100">+100 金币</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {toast && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 animate-[fadeInDown_0.3s_ease-out]">

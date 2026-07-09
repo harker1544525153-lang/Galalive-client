@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import { followAPI, giftAPI, userAPI, favoriteAPI } from '../api';
 
-const VideoPage = ({ user, onNavigate }) => {
+const VideoPage = ({ user, onNavigate, followingVersion, onFollowChange, showToast }) => {
   const [videos, setVideos] = useState([]);
   const [activeTab, setActiveTab] = useState('hot');
   const [selectedVideo, setSelectedVideo] = useState(null);
@@ -44,18 +44,19 @@ const VideoPage = ({ user, onNavigate }) => {
   const [gifts, setGifts] = useState([]);
   const [selectedGift, setSelectedGift] = useState(null);
   const [giftCount, setGiftCount] = useState(1);
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [followingStatus, setFollowingStatus] = useState({});
   const [diamonds, setDiamonds] = useState(user?.diamonds || 0);
   const progressTimerRef = useRef(null);
 
   useEffect(() => {
     document.title = 'Gala Live - 视频';
+    console.log('[Video.jsx] useEffect triggered - activeTab:', activeTab, ', followingVersion:', followingVersion);
     loadVideos();
     loadGifts();
     if (user) {
       refreshUserDiamonds();
     }
-  }, [activeTab]);
+  }, [activeTab, followingVersion]);
 
   useEffect(() => {
     if (selectedVideo && user) {
@@ -84,8 +85,10 @@ const VideoPage = ({ user, onNavigate }) => {
   const loadVideos = async () => {
     if (activeTab === 'following') {
       try {
+        console.log('[Video.jsx] loadVideos - loading following videos');
         const response = await userAPI.getFollowingVideos();
         const data = response.data || [];
+        console.log('[Video.jsx] loadVideos - API response:', data);
         
         let favoritedIds = [];
         if (user) {
@@ -102,8 +105,8 @@ const VideoPage = ({ user, onNavigate }) => {
           userId: v.user_id,
           username: v.username,
           nickname: v.nickname,
-          avatar: v.avatar,
-          cover: v.cover,
+          cover: v.user_cover,
+          videoCover: v.cover,
           title: v.title,
           description: v.description,
           likes: v.likes || 0,
@@ -124,12 +127,12 @@ const VideoPage = ({ user, onNavigate }) => {
     } else {
       const mockVideos = [
         {
-          id: 1,
-          userId: 1,
-          username: 'host1',
-          nickname: '才艺主播小美',
-          avatar: '',
-          cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=beautiful%20female%20singer%20performing%20on%20stage&image_size=portrait_9_16',
+        id: 1,
+        userId: 1,
+        username: 'host1',
+        nickname: '才艺主播小美',
+        cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=beautiful%20female%20singer%20stage%20purple%20pink%20gradient%20background%20live%20streaming&image_size=landscape_16_9',
+        videoCover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=beautiful%20female%20singer%20performing%20on%20stage&image_size=portrait_9_16',
           title: '今天给大家唱一首好听的歌',
           description: '这是我最喜欢的一首歌，从前奏到副歌都充满感情，希望你们也能感受到这份温暖。记得点赞关注哦，今晚8点直播间见！',
           likes: 2580,
@@ -143,12 +146,12 @@ const VideoPage = ({ user, onNavigate }) => {
           createdAt: '2小时前',
         },
         {
-          id: 2,
-          userId: 2,
-          username: 'host2',
-          nickname: '游戏大神阿杰',
-          avatar: '',
-          cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=gaming%20streamer%20playing%20competitive%20game&image_size=portrait_9_16',
+        id: 2,
+        userId: 2,
+        username: 'host2',
+        nickname: '游戏大神阿杰',
+        cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=gaming%20esports%20neon%20lights%20blue%20purple%20gradient%20cyber%20background&image_size=landscape_16_9',
+        videoCover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=gaming%20streamer%20playing%20competitive%20game&image_size=portrait_9_16',
           title: '五杀精彩时刻！这操作太秀了',
           description: '昨晚直播时打出的五杀操作，团队配合完美，走位细节满满，喜欢的话点个赞支持一下！',
           likes: 5680,
@@ -162,12 +165,12 @@ const VideoPage = ({ user, onNavigate }) => {
           createdAt: '5小时前',
         },
         {
-          id: 3,
-          userId: 4,
-          username: 'host4',
-          nickname: '美食达人小雨',
-          avatar: '',
-          cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=delicious%20chinese%20food%20cooking%20video&image_size=portrait_9_16',
+        id: 3,
+        userId: 7,
+        username: 'host4',
+        nickname: '美食达人小雨',
+        cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=delicious%20food%20cooking%20warm%20orange%20yellow%20kitchen%20background&image_size=landscape_16_9',
+        videoCover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=delicious%20chinese%20food%20cooking%20video&image_size=portrait_9_16',
           title: '红烧肉制作教程，超级下饭',
           description: '详细讲解了红烧肉的选料、焯水、炒糖色、炖煮全过程，新手也能做出饭店味道！',
           likes: 1890,
@@ -181,12 +184,12 @@ const VideoPage = ({ user, onNavigate }) => {
           createdAt: '8小时前',
         },
         {
-          id: 4,
-          userId: 5,
-          username: 'host5',
-          nickname: '脱口秀小王',
-          avatar: '',
-          cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=standup%20comedy%20performance%20funny&image_size=portrait_9_16',
+        id: 4,
+        userId: 8,
+        username: 'host5',
+        nickname: '脱口秀小王',
+        cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=comedy%20stage%20spotlight%20purple%20theater%20background%20funny&image_size=landscape_16_9',
+        videoCover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=standup%20comedy%20performance%20funny&image_size=portrait_9_16',
           title: '今天的段子太好笑了，笑到肚子疼',
           description: '现场脱口秀片段，讲的是上班族的故事，希望大家在忙碌之余能笑一笑。',
           likes: 3420,
@@ -200,12 +203,12 @@ const VideoPage = ({ user, onNavigate }) => {
           createdAt: '12小时前',
         },
         {
-          id: 5,
-          userId: 1,
-          username: 'host1',
-          nickname: '才艺主播小美',
-          avatar: '',
-          cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=beautiful%20dancer%20performing%20modern%20dance&image_size=portrait_9_16',
+        id: 5,
+        userId: 1,
+        username: 'host1',
+        nickname: '才艺主播小美',
+        cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=beautiful%20female%20singer%20stage%20purple%20pink%20gradient%20background%20live%20streaming&image_size=landscape_16_9',
+        videoCover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=beautiful%20dancer%20performing%20modern%20dance&image_size=portrait_9_16',
           title: '新学的舞蹈，希望大家喜欢',
           description: '练习了一个月的新舞蹈，今天终于录给大家看了，舞步里融入了一些民族风元素，求指导！',
           likes: 4120,
@@ -219,12 +222,12 @@ const VideoPage = ({ user, onNavigate }) => {
           createdAt: '1天前',
         },
         {
-          id: 6,
-          userId: 3,
-          username: 'host3',
-          nickname: '户外探险家',
-          avatar: '',
-          cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=outdoor%20adventure%20hiking%20beautiful%20nature&image_size=portrait_9_16',
+        id: 6,
+        userId: 3,
+        username: 'host3',
+        nickname: '户外探险家',
+        cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=beautiful%20outdoor%20nature%20landscape%20mountains%20sunset%20travel%20adventure&image_size=landscape_16_9',
+        videoCover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=outdoor%20adventure%20hiking%20beautiful%20nature&image_size=portrait_9_16',
           title: '今天带大家看最美的风景',
           description: '海拔3800米的高山湖泊，水清见底，远处雪山巍峨。大自然的鬼斧神工，值得每个人去看看。',
           likes: 6780,
@@ -283,9 +286,10 @@ const VideoPage = ({ user, onNavigate }) => {
 
   const checkFollowStatus = async () => {
     if (!selectedVideo?.userId || !user) return;
+    const userId = String(selectedVideo.userId);
     try {
-      const response = await followAPI.checkFollow(selectedVideo.userId);
-      setIsFollowing(response.data.isFollowing);
+      const response = await followAPI.checkFollow(userId);
+      setFollowingStatus(prev => ({ ...prev, [userId]: response.data.isFollowing }));
     } catch (error) {
       console.error('Failed to check follow status:', error);
     }
@@ -293,15 +297,34 @@ const VideoPage = ({ user, onNavigate }) => {
 
   const handleFollow = async () => {
     if (!selectedVideo?.userId || !user) return;
-    try {
-      if (isFollowing) {
-        await followAPI.unfollow({ followeeId: selectedVideo.userId });
-      } else {
-        await followAPI.follow({ followeeId: selectedVideo.userId });
+    const userId = String(selectedVideo.userId);
+    if (userId === String(user.id)) {
+      if (showToast) {
+        showToast('不能关注自己', 'error');
       }
-      setIsFollowing(!isFollowing);
+      return;
+    }
+    try {
+      let response;
+      const currentStatus = followingStatus[userId] || false;
+      const willFollow = !currentStatus;
+      if (currentStatus) {
+        response = await followAPI.unfollow({ followeeId: userId });
+      } else {
+        response = await followAPI.follow({ followeeId: userId });
+      }
+      setFollowingStatus(prev => ({ ...prev, [userId]: willFollow }));
+      if (onFollowChange) {
+        onFollowChange();
+      }
+      const message = response.data?.message || (willFollow ? '关注成功' : '取消关注成功');
+      if (showToast) {
+        showToast(message, 'success');
+      }
     } catch (error) {
-      alert(error.response?.data?.error || '操作失败');
+      if (showToast) {
+        showToast(error.response?.data?.error || '操作失败', 'error');
+      }
     }
   };
 
@@ -396,7 +419,7 @@ const VideoPage = ({ user, onNavigate }) => {
       id: Date.now(),
       userId: user?.id || 0,
       nickname: user?.nickname || '我',
-      avatar: user?.avatar || '',
+      avatar: user?.cover || '',
       content: commentText,
       time: '刚刚',
       likes: 0,
@@ -518,7 +541,7 @@ const VideoPage = ({ user, onNavigate }) => {
               >
                 <div className="relative aspect-[9/16] overflow-hidden">
                   <img
-                    src={video.cover}
+                    src={video.videoCover || video.cover}
                     alt={video.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
@@ -565,17 +588,20 @@ const VideoPage = ({ user, onNavigate }) => {
                     {video.title}
                   </p>
                   <div className="flex items-center justify-between">
-                    <div
-                      className="flex items-center gap-2 cursor-pointer"
+                    <div className="flex items-center gap-2 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         onNavigate && onNavigate('profile', { userId: video.userId });
                       }}
                     >
                       <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 p-0.5">
-                        <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center">
-                          <User className="w-3.5 h-3.5 text-gray-400" />
-                        </div>
+                        {video.cover ? (
+                          <img src={video.cover} alt="" className="w-full h-full rounded-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center">
+                            <User className="w-3.5 h-3.5 text-gray-400" />
+                          </div>
+                        )}
                       </div>
                       <span className="text-gray-400 text-xs font-medium">{video.nickname}</span>
                     </div>
@@ -605,7 +631,7 @@ const VideoPage = ({ user, onNavigate }) => {
           >
             <div className="relative w-full h-full">
               <img
-                src={selectedVideo.cover}
+                src={selectedVideo.videoCover || selectedVideo.cover}
                 alt={selectedVideo.title}
                 className="w-full h-full object-cover"
               />
@@ -657,9 +683,13 @@ const VideoPage = ({ user, onNavigate }) => {
                       onNavigate && onNavigate('profile', { userId: selectedVideo.userId });
                     }}
                   >
-                    <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center">
-                      <User className="w-5 h-5 text-gray-400" />
-                    </div>
+                    {selectedVideo.cover ? (
+                      <img src={selectedVideo.cover} alt="" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center">
+                        <User className="w-5 h-5 text-gray-400" />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-bold truncate">{selectedVideo.nickname}</p>
@@ -668,12 +698,12 @@ const VideoPage = ({ user, onNavigate }) => {
                   <button
                     onClick={handleFollow}
                     className={`px-5 py-2.5 rounded-full text-sm font-bold hover:opacity-90 transition-all ${
-                      isFollowing
+                      followingStatus[String(selectedVideo.userId)] || false
                         ? 'bg-gray-700/80 text-gray-300'
                         : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
                     }`}
                   >
-                    {isFollowing ? '已关注' : '+ 关注'}
+                    {followingStatus[String(selectedVideo.userId)] || false ? '已关注' : '+ 关注'}
                   </button>
                 </div>
 
@@ -1056,8 +1086,8 @@ const VideoPage = ({ user, onNavigate }) => {
           )}
 
           {showGiftPanel && (
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-end justify-center z-50" onClick={() => setShowGiftPanel(false)}>
-              <div className="bg-gray-900 w-full max-w-lg rounded-t-3xl p-5 max-h-[70vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-end justify-center z-50 pb-20" onClick={() => setShowGiftPanel(false)}>
+              <div className="bg-gray-900 w-full max-w-lg rounded-t-3xl p-5 pb-24 max-h-[70vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-white font-bold text-lg">选择礼物</h3>
                   <div className="flex items-center gap-2">

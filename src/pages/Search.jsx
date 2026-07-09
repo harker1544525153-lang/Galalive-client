@@ -125,9 +125,9 @@ const Search = ({ user, keyword, onNavigate }) => {
     return count || 0;
   };
 
-  const renderAvatar = (avatar, size = 'w-6 h-6') => {
-    if (avatar) {
-      return <img src={avatar} alt="" className="w-full h-full rounded-full object-cover" />;
+  const renderAvatar = (cover, size = 'w-6 h-6') => {
+    if (cover) {
+      return <img src={cover} alt="" className="w-full h-full rounded-full object-cover" />;
     }
     return (
       <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center">
@@ -167,7 +167,7 @@ const Search = ({ user, keyword, onNavigate }) => {
                 : 'bg-gradient-to-br from-pink-500 to-purple-600'
             }`}>
               <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
-                {renderAvatar(u.avatar, 'w-7 h-7')}
+                {renderAvatar(u.cover, 'w-7 h-7')}
               </div>
             </div>
             {isLiving && (
@@ -296,7 +296,7 @@ const Search = ({ user, keyword, onNavigate }) => {
         <p className="text-white font-bold text-sm mb-2 line-clamp-1">{stream.title}</p>
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 p-0.5 shrink-0">
-            {renderAvatar(stream.avatar, 'w-4 h-4')}
+            {renderAvatar(stream.cover, 'w-4 h-4')}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-xs font-medium truncate">{stream.nickname}</p>

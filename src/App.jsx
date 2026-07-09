@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Home, User, Video, MessageCircle, Radio } from 'lucide-react';
 import Logo from './components/Logo';
+import Toast from './components/Toast';
+import useToast from './hooks/useToast';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import HomePage from './pages/Home';
@@ -23,6 +25,8 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [match, setMatch] = useState({ params: {} });
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [followingVersion, setFollowingVersion] = useState(0);
+  const { toasts, showToast, removeToast } = useToast();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -123,6 +127,10 @@ const App = () => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
+  const handleFollowChange = () => {
+    setFollowingVersion(prev => prev + 1);
+  };
+
   const handleNavigate = (page, params = {}) => {
     setCurrentPage(page);
     if (params.roomId) {
@@ -155,19 +163,19 @@ const App = () => {
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return <HomePage user={user} onNavigate={handleNavigate} />;
+        return <HomePage user={user} onNavigate={handleNavigate} followingVersion={followingVersion} />;
       case 'live':
-        return <Live user={user} match={match} />;
+        return <Live user={user} match={match} onFollowChange={handleFollowChange} showToast={showToast} />;
       case 'broadcast':
         return <Broadcast user={user} onNavigate={handleNavigate} />;
       case 'profile':
-        return <Profile user={user} onLogout={handleLogout} onNavigate={handleNavigate} onUpdateUser={updateUser} />;
+        return <Profile user={user} onLogout={handleLogout} onNavigate={handleNavigate} onUpdateUser={updateUser} followingVersion={followingVersion} />;
       case 'search':
         return <Search user={user} keyword={searchKeyword} onNavigate={handleNavigate} />;
       case 'leaderboard':
         return <Leaderboard user={user} onNavigate={handleNavigate} />;
       case 'video':
-        return <VideoPage user={user} onNavigate={handleNavigate} />;
+        return <VideoPage user={user} onNavigate={handleNavigate} followingVersion={followingVersion} onFollowChange={handleFollowChange} showToast={showToast} />;
       case 'settings':
         return <Settings user={user} onNavigate={handleNavigate} />;
       case 'message':
@@ -183,7 +191,7 @@ const App = () => {
       case 'help':
         return <HelpCenter user={user} onNavigate={handleNavigate} />;
       default:
-        return <HomePage user={user} onNavigate={handleNavigate} />;
+        return <HomePage user={user} onNavigate={handleNavigate} followingVersion={followingVersion} />;
     }
   };
 
@@ -196,6 +204,14 @@ const App = () => {
       <div className={`transition-all duration-300 ${showBottomNav ? 'pb-20' : ''}`}>
         {renderPage()}
       </div>
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
       
       {showBottomNav && (
         <nav className="fixed bottom-0 left-0 right-0 bg-gray-900/98 backdrop-blur-xl border-t border-gray-800 z-50 pb-safe">

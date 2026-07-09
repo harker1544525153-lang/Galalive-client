@@ -20,6 +20,8 @@ const Register = ({ onLogin, onNavigate }) => {
   const [codeLoading, setCodeLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [toast, setToast] = useState(null);
+  const [showReward, setShowReward] = useState(false);
+  const [rewardAmount, setRewardAmount] = useState(0);
 
   useEffect(() => {
     document.title = 'Gala Live - 注册';
@@ -119,6 +121,12 @@ const Register = ({ onLogin, onNavigate }) => {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
 
+      if (response.data.showReward && response.data.user.coins > 0) {
+        setRewardAmount(response.data.user.coins);
+        setTimeout(() => setShowReward(true), 500);
+        setTimeout(() => setShowReward(false), 4500);
+      }
+
       showToast('success', '注册成功，正在进入...');
 
       if (onLogin) onLogin(response.data.user);
@@ -179,6 +187,20 @@ const Register = ({ onLogin, onNavigate }) => {
             >
               <X className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {showReward && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 animate-[bounce_0.6s_ease-out]">
+          <div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-8 py-5 rounded-2xl shadow-2xl flex items-center gap-4">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-7 h-7" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">恭喜注册成功</p>
+              <p className="text-base text-green-100">+{rewardAmount} 金币</p>
+            </div>
           </div>
         </div>
       )}

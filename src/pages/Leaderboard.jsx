@@ -3,6 +3,7 @@ import {
   Trophy, Crown, Medal, Award, User, Ticket, Coins,
   TrendingUp, TrendingDown, Minus, Sparkles, Calendar, Info,
 } from 'lucide-react';
+import { getUserLevelByLevelNum, loadLevelConfigs } from '../utils/level';
 
 const TIME_RANGES = [
   { id: 'day', label: '日榜', desc: '今日' },
@@ -104,9 +105,9 @@ const Leaderboard = ({ user, onNavigate }) => {
     return { icon: Minus, color: 'text-gray-500', bg: 'bg-gray-500/15', text: '持平' };
   };
 
-  const renderAvatar = (avatar, size = 'w-6 h-6') => {
-    if (avatar) {
-      return <img src={avatar} alt="" className="w-full h-full rounded-full object-cover" />;
+  const renderAvatar = (cover, size = 'w-6 h-6') => {
+    if (cover) {
+      return <img src={cover} alt="" className="w-full h-full rounded-full object-cover" />;
     }
     return (
       <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center">
@@ -148,11 +149,11 @@ const Leaderboard = ({ user, onNavigate }) => {
           <div className="relative shrink-0">
             <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${style.ring} p-1 shadow-xl`}>
               <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
-                {renderAvatar(item.avatar, 'w-10 h-10')}
+                {renderAvatar(item.cover, 'w-10 h-10')}
               </div>
             </div>
             {/* 等级徽章 */}
-            <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-gray-900">
+            <div className="absolute -bottom-1 -right-1 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-gray-900" style={{ background: getUserLevelByLevelNum(Math.min(item.level, 10)).color }}>
               Lv.{item.level}
             </div>
           </div>
@@ -209,7 +210,7 @@ const Leaderboard = ({ user, onNavigate }) => {
         <div className="relative shrink-0">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500/60 to-purple-600/60 p-0.5">
             <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
-              {renderAvatar(item.avatar, 'w-6 h-6')}
+              {renderAvatar(item.cover, 'w-6 h-6')}
             </div>
           </div>
         </div>
@@ -225,7 +226,7 @@ const Leaderboard = ({ user, onNavigate }) => {
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-gray-500 text-xs truncate">@{item.username}</span>
             <span className="text-gray-700">·</span>
-            <span className="text-xs text-pink-400 font-medium shrink-0">Lv.{item.level}</span>
+            <span className="text-xs font-medium shrink-0" style={{ color: getUserLevelByLevelNum(Math.min(item.level, 10)).color }}>Lv.{item.level}</span>
           </div>
         </div>
 

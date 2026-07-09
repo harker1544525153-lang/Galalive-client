@@ -223,8 +223,8 @@ const Settings = ({ user, onNavigate, onLogout }) => {
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 p-0.5">
               <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
-                {user?.avatar ? (
-                  <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                {user?.cover ? (
+                  <img src={user.cover} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <User className="w-7 h-7 text-gray-400" />
                 )}

@@ -5,6 +5,7 @@ import {
   Eye, Zap, Minus, Plus, Check, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { streamAPI, giftAPI, userAPI, followAPI } from '../api';
+import { getUserLevelByLevelNum, loadLevelConfigs } from '../utils/level';
 
 const DANMAKU_COLORS = ['#ffffff', '#ff6b9d', '#ffd700', '#00e5ff', '#7cff6b', '#ff6b6b', '#c77dff'];
 const DANMAKU_COST = 2;
@@ -18,7 +19,7 @@ const REPORT_TYPES = [
   { value: 'other', label: '其他', icon: '📝' },
 ];
 
-const Live = ({ user, match }) => {
+const Live = ({ user, match, onFollowChange, showToast }) => {
   const roomId = match?.params?.roomId;
 
   // 核心数据
@@ -70,6 +71,7 @@ const Live = ({ user, match }) => {
 
   useEffect(() => {
     document.title = 'Gala Live - 直播间';
+    loadLevelConfigs();
     loadStream();
     loadGifts();
     loadViewers();
@@ -224,7 +226,7 @@ const Live = ({ user, match }) => {
         gift: data.gift,
         count: newCount,
         nickname: data.nickname,
-        avatar: data.avatar,
+        avatar: data.cover,
       };
     });
     if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
@@ -243,7 +245,7 @@ const Live = ({ user, match }) => {
       content: inputMessage,
       username: user.username,
       nickname: user.nickname,
-      avatar: user.avatar,
+      avatar: user.cover,
     };
     socketRef.current.emit('chat_message', msgData);
     setMessages(prev => [...prev, {
@@ -266,7 +268,7 @@ const Live = ({ user, match }) => {
       content: inputMessage,
       username: user.username,
       nickname: user.nickname,
-      avatar: user.avatar,
+      avatar: user.cover,
     };
     socketRef.current.emit('danmaku', msgData);
     addDanmaku(msgData);
@@ -299,14 +301,14 @@ const Live = ({ user, match }) => {
           gift: response.data.gift,
           username: user.username,
           nickname: user.nickname,
-          avatar: user.avatar,
+          avatar: user.cover,
         });
       }
       setDiamonds(prev => prev - selectedGift.price * giftCount);
       triggerGiftCombo({
         gift: response.data.gift,
         nickname: user.nickname,
-        avatar: user.avatar,
+        avatar: user.cover,
       });
       setShowGiftPanel(false);
       setSelectedGift(null);
@@ -336,14 +338,14 @@ const Live = ({ user, match }) => {
           gift: response.data.gift,
           username: user.username,
           nickname: user.nickname,
-          avatar: user.avatar,
+          avatar: user.cover,
         });
       }
       setDiamonds(prev => prev - selectedGift.price);
       triggerGiftCombo({
         gift: response.data.gift,
         nickname: user.nickname,
-        avatar: user.avatar,
+        avatar: user.cover,
       });
     } catch (error) {
       alert(error.response?.data?.error || '发送失败');
@@ -355,14 +357,25 @@ const Live = ({ user, match }) => {
   const handleFollow = async () => {
     if (!stream?.host_id || !user) return;
     try {
+      let response;
+      const willFollow = !isFollowing;
       if (isFollowing) {
-        await followAPI.unfollow({ followeeId: stream.host_id });
+        response = await followAPI.unfollow({ followeeId: stream.host_id });
       } else {
-        await followAPI.follow({ followeeId: stream.host_id });
+        response = await followAPI.follow({ followeeId: stream.host_id });
       }
-      setIsFollowing(!isFollowing);
+      setIsFollowing(willFollow);
+      if (onFollowChange) {
+        onFollowChange();
+      }
+      const message = response.data?.message || (willFollow ? '关注成功' : '取消关注成功');
+      if (showToast) {
+        showToast(message, 'success');
+      }
     } catch (error) {
-      alert(error.response?.data?.error || '操作失败');
+      if (showToast) {
+        showToast(error.response?.data?.error || '操作失败', 'error');
+      }
     }
   };
 
@@ -533,8 +546,8 @@ const Live = ({ user, match }) => {
           {/* 主播信息 */}
           <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full pl-1 pr-3 py-1 flex-1 min-w-0 max-w-md">
             <div className="relative flex-shrink-0">
-              {stream.avatar ? (
-                <img src={stream.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+              {stream.cover ? (
+                <img src={stream.cover} alt="" className="w-8 h-8 rounded-full object-cover" />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
                   <User className="w-4 h-4 text-white" />
@@ -867,7 +880,7 @@ const Live = ({ user, match }) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm font-medium truncate">{item.nickname}</p>
-                      <p className="text-gray-500 text-xs">Lv.{item.level || 1}</p>
+                      <p className="text-xs" style={{ color: getUserLevelByLevelNum(item.level || 1).color }}>Lv.{item.level || 1}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="text-sm">💎</span>
@@ -909,7 +922,7 @@ const Live = ({ user, match }) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm font-medium truncate">{viewer.nickname}</p>
-                      <p className="text-gray-500 text-xs">Lv.{viewer.level || 1}</p>
+                      <p className="text-xs" style={{ color: getUserLevelByLevelNum(viewer.level || 1).color }}>Lv.{viewer.level || 1}</p>
                     </div>
                   </div>
                 ))
