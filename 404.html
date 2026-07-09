@@ -4,9 +4,18 @@
     <meta charset="utf-8" />
     <title>Gala Live</title>
     <script>
-      const path = window.location.pathname;
-      const search = window.location.search;
-      window.location.replace('/Galalive-client/index.html?path=' + encodeURIComponent(path + search));
+      (function() {
+        var path = window.location.pathname;
+        var search = window.location.search;
+        var hash = window.location.hash;
+        var base = '/Galalive-client';
+        
+        if (path.startsWith(base)) {
+          path = path.substring(base.length);
+        }
+        
+        window.location.replace(base + '/index.html' + search + hash);
+      })();
     </script>
   </head>
   <body></body>
