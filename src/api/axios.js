@@ -11,7 +11,7 @@ const getApiBaseUrl = () => {
     return '/api';
   }
   
-  return 'https://galalive-backend-hgvmv6jjb-harker1544.vercel.app/api';
+  return 'https://galalive-backend.vercel.app/api';
 };
 
 const api = axios.create({

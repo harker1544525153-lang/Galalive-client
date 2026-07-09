@@ -45,7 +45,7 @@ npm run build
 VITE_API_URL=http://localhost:3002/api
 
 # Vercel部署
-VITE_API_URL=https://galalive-backend-hgvmv6jjb-harker1544.vercel.app/api
+VITE_API_URL=https://galalive-backend.vercel.app/api
 ```
 
 ## 部署
