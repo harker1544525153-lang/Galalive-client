@@ -16,7 +16,7 @@
         
         var fullPath = path + search + hash;
         
-        window.location.replace(base + '/index.html?path=' + encodeURIComponent(fullPath));
+        window.location.replace(base + '/index.html?v=' + Date.now() + '&path=' + encodeURIComponent(fullPath));
       })();
     </script>
   </head>
