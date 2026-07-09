@@ -119,7 +119,9 @@ const Login = ({ onLogin, onNavigate }) => {
       if (onLogin) onLogin(response.data.user);
 
       setTimeout(() => {
-        window.location.href = '/';
+        const path = window.location.pathname;
+        const base = path.startsWith('/Galalive-client') ? '/Galalive-client' : '';
+        window.location.href = base + '/';
       }, 600);
     } catch (error) {
       const msg =

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Gala Live</title>
+    <script>
+      (function() {
+        var path = window.location.pathname;
+        var search = window.location.search;
+        var hash = window.location.hash;
+        var base = '/Galalive-client';
+        
+        if (path.startsWith(base)) {
+          path = path.substring(base.length);
+        }
+        
+        var fullPath = path + search + hash;
+        
+        window.location.replace(base + '/index.html?v=' + Date.now() + '&path=' + encodeURIComponent(fullPath));
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>

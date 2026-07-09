@@ -29,6 +29,32 @@ const App = () => {
   const { toasts, showToast, removeToast } = useToast();
 
   useEffect(() => {
+    const getRelativePath = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pathParam = urlParams.get('path');
+      
+      if (pathParam) {
+        let decoded = decodeURIComponent(pathParam);
+        const base = '/Galalive-client';
+        if (decoded.startsWith(base)) {
+          decoded = decoded.substring(base.length);
+        }
+        if (decoded === '') decoded = '/';
+        return decoded;
+      }
+      
+      const base = '/Galalive-client';
+      let path = window.location.pathname;
+      if (path.startsWith(base)) {
+        path = path.substring(base.length);
+      }
+      if (path === '') path = '/';
+      return path;
+    };
+    
+    const currentPath = getRelativePath();
+    const isAuthPage = currentPath === '/login' || currentPath === '/register';
+    
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
     
@@ -42,33 +68,31 @@ const App = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
-    } else {
+    } else if (!isAuthPage) {
       const defaultUser = {
         id: 1,
         username: 'host1',
+        password: '$2a$10$W88TssBNzh9krpZs4dou2.TMB6P0aKa7Phkfu9AJSqhRVWTk3bY72',
+        phone: '13800138001',
         nickname: '才艺主播小美',
-        level: 10,
-        diamonds: 5000,
-        coins: 10000,
         is_host: 1,
-        gender: 'female',
+        host_status: 'approved',
+        level: 10,
+        host_level: 5,
+        exp: 2500,
+        host_exp: 3500,
+        coins: 10000,
+        diamonds: 5000,
+        status: 'active',
         signature: '唱歌跳舞样样精通~',
+        gender: 'female',
         address: '北京',
+        cover: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=beautiful%20female%20singer%20stage%20purple%20pink%20gradient%20background%20live%20streaming&image_size=landscape_16_9',
         created_at: '2026-07-08 13:42:35'
       };
       setUser(defaultUser);
       localStorage.setItem('token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJob3N0MSIsImlhdCI6MTc4MzUxOTc4MCwiZXhwIjoxNzgzNjA2MTgwfQ.WmfL12v3ICsu_OyTr0Cv9p4Vmr4_8Mg7KQamZ_P3TeE');
       localStorage.setItem('user', JSON.stringify(defaultUser));
-    }
-    
-    const getRelativePath = () => {
-      const base = '/Galalive-client';
-      let path = window.location.pathname;
-      if (path.startsWith(base)) {
-        path = path.substring(base.length);
-      }
-      if (path === '') path = '/';
-      return path;
     };
     
     const updatePageFromUrl = () => {
@@ -172,7 +196,7 @@ const App = () => {
     }
   };
 
-  if (!user) {
+  if (!user || currentPage === 'login') {
     if (currentPage === 'register') {
       return <Register onLogin={handleLogin} onNavigate={handleNavigate} />;
     }
